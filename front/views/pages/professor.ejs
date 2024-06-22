@@ -1,0 +1,244 @@
+<h1>
+    <%= title %>
+  </h1>
+  
+  <!-- Botão para abrir o modal -->
+  <a class="btn-floating btn-large waves-effect waves-light red modal-trigger" href="#petModal" onclick="clearForm()">
+    <i class="material-icons">add</i>
+  </a>
+  
+  <!-- Modal Structure -->
+  <div id="petModal" class="modal">
+    <div class="modal-content">
+        <h4>Professores</h4>
+        <div class="scrollable-content">
+            <form id="petForm">
+                <input type="hidden" name="id" id="id">
+                <div class="input-field">
+                    <input required name="cpfProfessor" id="cpfProfessor" type="text" class="validate" placeholder="123.456.789-00">
+                    <label for="cpfProfessor">Cpf do Professor</label>
+                    <span class="helper-text" data-error="CPF é obrigatório"></span>
+                </div>
+                <div class="input-field">
+                    <input required name="nomeProfessor" id="nomeProfessor" type="text" class="validate">
+                    <label for="nomeProfessor">Nome</label>
+                    <span class="helper-text" data-error="Nome é obrigatório"></span>
+                </div>
+                <div class="input-field">
+                    <input required name="email" id="email" type="text" class="validate">
+                    <label for="email">Email</label>
+                    <span class="helper-text" data-error="Email é obrigatório"></span>
+                </div>
+                <div class="input-field">
+                    <input required name="phone" id="phone" type="text" class="validate" placeholder="(87) 9 9630-4873">
+                    <label for="phone">Telefone</label>
+                    <span class="helper-text" data-error="Telefone é obrigatório"></span>
+                </div>
+                <label for="gender">Sexo</label>
+                <div class="input-field">
+                    <select required name="sexo" id="sexo">
+                        <option value="" disabled selected>Escolha o Sexo</option>
+                        <option value="Masculino">Masculino</option>
+                        <option value="Feminino">Feminino</option>
+                    </select>
+                    <span class="helper-text" data-error="Sexo é obrigatório"></span>
+                </div>
+                <div class="input-field">
+                    <input required name="especializacao" id="especializacao" type="text" class="validate">
+                    <label for="especializacao">Grau de Especialização</label>
+                    <span class="helper-text" data-error="Indicar o seu Grau é obrigatório"></span>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <a href="#!" class="modal-close waves-effect waves-red btn-flat" onclick="clearForm()">
+            <i class="material-icons left">cancel</i>Cancelar
+        </a>
+        <button type="button" class="waves-effect waves-green btn-flat" onclick="submitForm()">
+            <i class="material-icons left">send</i>Enviar
+        </button>
+    </div>
+    <span id="error" class="red-text"></span>
+</div>
+  
+  <% if (error) { %>
+  <span class="red-text">
+    <%= error %>
+  </span>
+  <% } %>
+  
+  <table class="striped table-responsive">
+    <thead>
+      <tr>
+        <% for (let col of cols) { %>
+        <th>
+          <%= col %>
+        </th>
+        <% } %>
+      </tr>
+    </thead>
+    <tbody>
+      <% for (let pet of pets) { %>
+      <tr>
+        <% for (let prop in pet) { %>
+        <td>
+          <%= pet[prop] %>
+        </td>
+        <% } %>
+        <td>
+          <a class="btn-floating btn-small waves-effect waves-light blue" onclick="editPet('<%= pet.id %>')">
+            <i class="material-icons">edit</i>
+          </a>
+          <a class="btn-floating btn-small waves-effect waves-light red" onclick="deletePet('<%= pet.id %>')">
+            <i class="material-icons">delete</i>
+          </a>
+        </td>
+      </tr>
+      <% } %>
+    </tbody>
+  </table>
+  
+  <style>
+    .scrollable-content {
+      max-height: 400px; /* Defina a altura máxima conforme necessário */
+      overflow-y: auto;
+    }
+  </style>
+  
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var elems = document.querySelectorAll('.modal');
+        var instances = M.Modal.init(elems);
+        
+        // Aplicar máscara ao campo de telefone
+        var phoneInput = document.getElementById('phone');
+        Inputmask({"mask": "(99) 9 9999-9999"}).mask(phoneInput);
+        var CPFInput = document.getElementById('cpfProfessor');
+        Inputmask({"mask": "999.999.999-99"}).mask(CPFInput);
+    });
+
+    const form = document.getElementById('petForm');
+  
+    function submitForm() {
+      if (form.checkValidity()) {
+        const pet = mountDataForm();
+        let id = pet.id;
+        let METHOD = id ? 'PUT' : 'POST';
+        let URL = id ? `/professor/${id}` : '/professor';
+        createOrUpdate(pet, URL, METHOD);
+      } else {
+        form.classList.add('was-validated');
+        M.updateTextFields();
+        form.reportValidity();
+      }
+    }
+  
+    // CRIAR OU ATUALIZAR USUÁRIO
+    function createOrUpdate(pet, URL, METHOD) {
+      fetch(URL, {
+          method: METHOD,
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(pet)
+        })
+        .then(async (res) => await checkError(res))
+        .then((pet) => {
+          form.reset();
+          clearValidationErrors();
+          var instance = M.Modal.getInstance(document.getElementById('petModal'));
+          instance.close();
+          window.location.reload();
+        })
+        .catch((error) => {
+          document.getElementById('error').innerText = error.error;
+        });
+    }
+  
+    // BUSCAR USUÁRIO A SER EDITADO PELO ID E CARREGAR NOS INPUTS DO FORM
+    function editPet(id) {
+      fetch("/professor/" + id, {
+          method: "GET"
+        })
+        .then(async (res) => await checkError(res))
+        .then((pet) => {
+          clearForm(); // Limpar formulário antes de carregar novos dados
+          for (let prop in pet) {
+            const input = document.querySelector(`input[name="${prop}"]`);
+            if (input) {
+              input.value = pet[prop];
+              M.updateTextFields();
+            }
+          }
+  
+          setTimeout(async () => {
+  
+            selects = await document.querySelectorAll("div.select-wrapper")
+
+            selects[0].querySelector("ul").querySelectorAll("li").forEach((a) => {
+              if (a.querySelector("span").innerText == pet.gender) {
+                $(a).click()
+              }
+            })
+          }, 200);
+  
+          var instance = M.Modal.getInstance(document.getElementById('petModal'));
+          instance.open();
+        })
+        .catch((error) => {
+          document.getElementById('error').innerText = error.error;
+        });
+    }
+  
+    // DELETAR UM USUÁRIO PELO ID
+    function deletePet(id) {
+      fetch("/professor/" + id, {
+          method: "DELETE"
+        })
+        .then(async (res) => await checkError(res))
+        .then(() => {
+          window.location.reload();
+        })
+        .catch((error) => {
+          document.getElementById('error').innerText = error.error;
+        });
+    }
+  
+    // CHECAR ERROS NA RESPOSTA DA REQUISIÇÃO
+    async function checkError(res) {
+      if (!res.ok) {
+        const err = await res.json();
+        throw err;
+      }
+      return res.json();
+    }
+  
+    // MONTAR DADOS DO FORMULÁRIO USANDO FORMDATA
+    function mountDataForm() {
+      const formData = new FormData(form);
+      const pet = {};
+      formData.forEach((v, k) => {
+        pet[k] = v;
+      });
+      return pet;
+    }
+  
+    // LIMPAR FORMULÁRIO E MENSAGENS DE ERRO
+    function clearForm() {
+      form.reset();
+      clearValidationErrors();
+      M.updateTextFields();
+    }
+  
+    // LIMPAR MENSAGENS DE ERRO
+    function clearValidationErrors() {
+      const inputs = form.querySelectorAll('.validate');
+      inputs.forEach(input => {
+        input.classList.remove('valid');
+        input.classList.remove('invalid');
+      });
+      form.classList.remove('was-validated');
+    }
+  </script>
+  

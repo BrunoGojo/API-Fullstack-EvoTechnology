@@ -1,0 +1,49 @@
+body{
+background-color:#a5a7b6ab;
+}
+
+h1{
+    line-height: 56px;
+    font-size: 49px;
+}
+
+h1 span{
+ color: #DFA716;
+}
+
+section p{
+  font-size: 20px;
+  line-height: 28px;
+  color: #000;
+  margin-bottom: 20px;
+}
+.produto{
+  position: relative;
+  left: 50%;
+  top: 50%;
+  width: 230px;
+}
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+footer {
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  padding: 10px 0;
+  text-align: center;
+  font-size: 18px;
+  color: #ffffff;
+}
+
+@media screen  and (max-width:768px) {
+
+
+  @media (max-width: 768px) {
+    img {
+      max-width: 50%;
+    }  
+  }
+}
